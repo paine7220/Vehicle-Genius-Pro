@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vehicle Genius: Mechanical & Electrical Hub</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+/* --- FONTS & COLORS --- */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+:root {--brand-primary:#065f46;--brand-ink:#0f172a;--bg-sage:#f8faf4;}
+body{font-family:'Plus Jakarta Sans',sans-serif;background-color:var(--bg-sage);color:var(--brand-ink);scroll-behavior:smooth;overflow-x:hidden;}
+
+/* --- GAUGE --- */
+.gauge-outer{width:200px;height:100px;background:#e2e8f0;border-top-left-radius:100px;border-top-right-radius:100px;position:relative;overflow:hidden;border:4px solid #1e293b;}
+.gauge-inner{width:160px;height:80px;background:var(--bg-sage);border-top-left-radius:80px;border-top-right-radius:80px;position:absolute;bottom:0;left:20px;z-index:2;}
+.gauge-needle{width:4px;height:80px;background:#ef4444;position:absolute;bottom:0;left:calc(50% - 2px);transform-origin:bottom center;transition:transform 1s cubic-bezier(0.4,0,0.2,1);z-index:3;border-radius:2px;}
+
+/* --- COMPONENT CARDS --- */
+.lab-card{background:rgba(255,255,255,0.9);backdrop-filter:blur(10px);border:1px solid rgba(0,0,0,0.05);border-radius:24px;transition:transform 0.2s;}
+.connector-housing{background:#1e293b;border-radius:12px;padding:20px;display:grid;gap:12px;box-shadow:0 10px 15px -3px rgba(0,0,0,0.3);}
+.female-pin{width:26px;height:26px;background:#0f172a;border:2px solid #334155;border-radius:4px;cursor:pointer;transition:all 0.2s;}
+.female-pin.active{border-color:#fbbf24;background:#451a03;box-shadow:0 0 12px rgba(251,191,36,0.5);}
+.loading-dots:after{content:'.';animation:dots 1.5s steps(5,end) infinite;}
+@keyframes dots{0%,20%{color:rgba(0,0,0,0);text-shadow:.25em 0 0 rgba(0,0,0,0),.5em 0 0 rgba(0,0,0,0);}40%{color:#065f46;text-shadow:.25em 0 0 rgba(0,0,0,0),.5em 0 0 rgba(0,0,0,0);}60%{text-shadow:.25em 0 0 #065f46,.5em 0 0 rgba(0,0,0,0);}80%,100%{text-shadow:.25em 0 0 #065f46,.5em 0 0 #065f46;}}
+.chat-bubble{border-radius:20px;padding:14px 18px;font-size:.875rem;max-width:85%;box-shadow:0 2px 4px rgba(0,0,0,0.05);}
+</style>
+</head>
+<body class="antialiased">
+
+<!-- HEADER -->
+<nav class="bg-white/90 backdrop-blur-md border-b border-slate-200 sticky top-0 z-50">
+<div class="max-w-7xl mx-auto px-6 py-4 flex flex-col lg:flex-row justify-between items-center gap-6">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 bg-emerald-800 rounded-2xl flex items-center justify-center text-white font-black text-2xl shadow-xl shadow-emerald-100">G</div>
+<div>
+<h1 class="text-xl font-black tracking-tight text-slate-900 block leading-none">VEHICLE GENIUS <span class="text-emerald-700">PRO</span></h1>
+<span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1 block">Full-Spectrum Diagnostic Suite</span>
+</div>
+</div>
+<div class="flex flex-wrap justify-center gap-2 bg-slate-100 p-1.5 rounded-2xl border border-slate-200">
+<button onclick="setVehicle('motorcycle')" id="btn-motorcycle" class="vehicle-btn px-5 py-2.5 rounded-xl text-xs font-bold transition-all bg-white shadow-md text-emerald-800">🏍️ MOTO</button>
+<button onclick="setVehicle('car')" id="btn-car" class="vehicle-btn px-5 py-2.5 rounded-xl text-xs font-bold transition-all text-slate-500 hover:text-slate-700">🚗 CAR</button>
+<button onclick="setVehicle('truck')" id="btn-truck" class="vehicle-btn px-5 py-2.5 rounded-xl text-xs font-bold transition-all text-slate-500 hover:text-slate-700">🚛 TRUCK</button>
+</div>
+</div>
+</nav>
+
+<!-- MAIN -->
+<main class="max-w-7xl mx-auto px-6 py-10 space-y-16">
+<!-- QUICK DASHBOARD -->
+<section class="grid grid-cols-1 lg:grid-cols-12 gap-10">
+<div class="lg:col-span-4 space-y-8">
+<h2 id="hero-title" class="text-4xl font-extrabold text-slate-900 leading-tight">Precision <br><span class="text-emerald-800 italic">Diagnostic Lab</span></h2>
+<p id="hero-desc" class="text-slate-500 mt-4 leading-relaxed">Toggle between mechanical performance and electrical wiring to pinpoint faults across the entire machine.</p>
+<div class="flex flex-col gap-3">
+<button onclick="setLab('mechanical')" id="lab-btn-mech" class="w-full flex items-center justify-between p-5 bg-emerald-800 text-white rounded-2xl shadow-lg transition-all group">
+<div class="text-left"><span class="block font-black text-sm uppercase tracking-widest">Mechanical Lab</span><span class="text-[10px] opacity-70">Compression, Fuel, Timing</span></div>
+<span class="text-2xl group-hover:translate-x-1 transition">⚙️</span></button>
+<button onclick="setLab('electrical')" id="lab-btn-elec" class="w-full flex items-center justify-between p-5 bg-white border border-slate-200 text-slate-700 rounded-2xl hover:bg-slate-50 transition-all group">
+<div class="text-left"><span class="block font-black text-sm uppercase tracking-widest">Electrical Lab</span><span class="text-[10px] opacity-70">Pin-outs, Harnesses, Logic</span></div>
+<span class="text-2xl group-hover:translate-x-1 transition">⚡</span></button>
+</div>
+</div>
+<div class="lg:col-span-8 bg-white rounded-[32px] p-8 border border-slate-100 shadow-sm flex flex-col md:flex-row gap-10 items-center">
+<div class="flex-1 space-y-6 w-full">
+<h3 class="text-xs font-black text-slate-400 uppercase tracking-widest">Global Health Trends</h3>
+<div class="chart-container"><canvas id="mainStatsChart"></canvas></div>
+</div>
+<div class="w-full md:w-64 space-y-6 text-center">
+<h3 class="text-xs font-black text-slate-400 uppercase tracking-widest">Vacuum Gauge</h3>
+<div class="gauge-outer mx-auto"><div class="gauge-inner"></div><div id="gaugeNeedle" class="gauge-needle" style="transform: rotate(-70deg);"></div></div>
+<div class="space-y-1"><div id="gaugeValue" class="text-2xl font-black text-slate-800">18.5</div>
+<div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Inches Hg (Vacuum)</div></div>
+</div>
+</div>
+</section>
+
+<!-- AI MECHANIC HUB -->
+<section id="ai-hub" class="grid grid-cols-1 lg:grid-cols-3 gap-10">
+<div class="lg:col-span-1">
+<div class="lab-card p-8 h-full flex flex-col">
+<h3 class="text-2xl font-extrabold">✨ AI Specialist</h3>
+<p class="text-slate-500 text-sm mt-2">Gemini analyzes symptoms across both labs. Tell me what you hear or feel.</p>
+<div class="mt-8 space-y-4">
+<button onclick="askAI('Clicking noise from top of engine')" class="w-full text-left p-4 rounded-2xl bg-slate-50 border border-slate-100 hover:border-emerald-300 transition text-[11px] font-bold text-slate-600">"Tapping noise in head"</button>
+<button onclick="askAI('White smoke from exhaust on startup')" class="w-full text-left p-4 rounded-2xl bg-slate-50 border border-slate-100 hover:border-emerald-300 transition text-[11px] font-bold text-slate-600">"White smoke/Blue smoke"</button>
+</div>
+<div class="mt-auto pt-8"><div class="bg-emerald-50 p-4 rounded-xl text-[10px] text-emerald-800 font-bold leading-relaxed">💡 PRO TIP: Log a compression test in the Mechanical Lab before asking for misfire advice.</div></div>
+</div>
+</div>
+
+<div class="lg:col-span-2 bg-slate-900 rounded-[32px] shadow-2xl overflow-hidden flex flex-col h-[550px]">
+<div class="p-4 bg-slate-800 border-b border-white/5 flex items-center justify-between">
+<div class="flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+<span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Gemini Engine Online</span></div>
+</div>
+<div id="chat-window" class="flex-1 overflow-y-auto p-8 space-y-6">
+<div class="chat-bubble bg-slate-800 text-slate-300 self-start border border-white/5">Hello. I am the Gemini Integrated Diagnostic. Select a vehicle type and diagnostic mode to begin our investigation.</div>
+</div>
+<div class="p-6 bg-slate-800 flex gap-3">
+<input type="text" id="chat-input" placeholder="Describe symptoms (e.g. Engine shudders when hot)..." class="flex-1 bg-slate-900 border-none rounded-2xl px-6 py-4 text-sm text-white focus:ring-2 focus:ring-emerald-500 outline-none transition">
+<button id="send-btn" class="bg-emerald-600 text-white px-8 rounded-2xl font-black text-sm hover:bg-emerald-700 transition">✨ ASK</button>
+</div>
+</div>
+</section>
+
+<!-- Add full JS for vehicle selection, AI, logging, gauge, chart, etc. -->
+<script>
+// State & Data (simplified for brevity)
+let state={vehicle:'motorcycle',lab:'mechanical',logs:[],selectedComponent:null,gaugeVal:18.5};
+const appData={vehicles:{motorcycle:{name:'Motorcycle',cylinders:1,labels:['Comp','Fuel','Trigger','CDI','Coil']},car:{name:'Car',cylinders:4,labels:['Comp','Fuel','Timing','ECU','COP']},truck:{name:'Truck',cylinders:8,labels:['Comp','Boost','Timing','PCM','Harness']}},mechanical:{motorcycle:[{name:'Valvetrain',val:'0.05-0.10mm',status:'Inspect lash'},{name:'Cylinders',val:'120-150 PSI',status:'Dry test'},{name:'Fuel Rail',val:'43 PSI (EFI)',status:'Check pump'},{name:'Timing',val:'Chain Driven',status:'Tension check'}],car:[{name:'Valvetrain',val:'Variable VVT',status:'Check solenoids'},{name:'Cylinders',val:'150-180 PSI',status:'Multi-cyl bal'},{name:'Fuel Rail',val:'60 PSI',status:'Regulator check'},{name:'Timing',val:'Belt/Chain',status:'Interval check'}],truck:[{name:'Valvetrain',val:'Hydraulic Lifters',status:'Quiet/Noisy'},{name:'Cylinders',val:'140-160 PSI',status:'Load test'},{name:'Fuel Rail',val:'Diesel HPFP',status:'Extreme pressure'},{name:'Timing',val:'Gear Driven',status:'Rock solid'}]},electrical:{motorcycle:[{id:1,name:"Trigger (+)",color:"Blue/White",spec:"120-160 Ω"},{id:2,name:"Exciter",color:"Black/Red",spec:"300-500 Ω"},{id:3,name:"Kill Sw",color:"Black/White",spec:"Open"},{id:4,name:"Coil Out",color:"Black/Yellow",spec:"0.2-0.5 Ω"},{id:5,name:"Ground",color:"Green",spec:"< 0.1 Ω"},{id:6,name:"Neutral",color:"Lt Green",spec:"Cont."}],car:[{id:1,name:"Crank Pos",color:"Grey/Red",spec:"Hall Signal"},{id:2,name:"Cam Pos",color:"Grn/Wht",spec:"Ref Sig"},{id:3,name:"5V Ref",color:"Blue",spec:"5.0 V"},{id:4,name:"Coil Trg 1",color:"Purple",spec:"Pulse"},{id:5,name:"Injector 1",color:"Tan",spec:"14 Ω"},{id:6,name:"O2 Heat",color:"Orange",spec:"10 Ω"},{id:7,name:"Gnd",color:"Black",spec:"< 0.1 Ω"},{id:8,name:"CAN-H",color:"Yel/Wht",spec:"2.5 V"}],truck:[{id:1,name:"High-Idle",color:"Yellow",spec:"12V"},{id:2,name:"ABS Line",color:"Wht/Blu",spec:"Data"},{id:3,name:"Lift Pump",color:"Red/Grn",spec:"12V / 10A"},{id:4,name:"Tlr Brake",color:"Blue",spec:"PWM"},{id:5,name:"Wait-Start",color:"Pink",spec:"Gnd"},{id:6,name:"PCM Gnd",color:"Blk/Wht",spec:"< 0.1 Ω"}]}};
+
+// Simplified example functions for vehicle selection
+function setVehicle(v){state.vehicle=v;updateGauge(15+Math.random()*5);}
+function setLab(l){state.lab=l;}
+function askAI(txt){const chat=document.getElementById('chat-window');addBubble(txt,'user');addBubble('Analyzing<span class="loading-dots"></span>','ai');setTimeout(()=>{addBubble('Diagnosis: Check engine components.','ai');},1000);}
+function addBubble(content,type){const win=document.getElementById('chat-window');const b=document.createElement('div');b.className=`chat-bubble ${type==='user'?'bg-emerald-600 text-white self-end ml-auto':'bg-slate-800 text-slate-300 self-start border border-white/5'}`;b.innerHTML=content;win.appendChild(b);win.scrollTop=win.scrollHeight;}
+function updateGauge(val){state.gaugeVal=val;const n=document.getElementById('gaugeNeedle');const d=document.getElementById('gaugeValue');n.style.transform=`rotate(${((val/30)*180)-90}deg)`;d.innerText=val.toFixed(1);}
+document.getElementById('send-btn').onclick=()=>askAI(document.getElementById('chat-input').value);
+</script>
+</body>
+</html
